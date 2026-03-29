@@ -1,8 +1,8 @@
-# Workspace
+# HedgeBot Pro — Workspace
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+Full-stack monorepo with a Binance-inspired dark/light trading tool: HedgeBot Pro.
 
 ## Stack
 
@@ -12,85 +12,97 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **TypeScript version**: 5.9
 - **API framework**: Express 5
 - **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+- **Frontend**: React 18 + Vite + Tailwind CSS v4 + Framer Motion
+- **UI Components**: shadcn/ui (Radix UI)
+- **Router**: Wouter
+- **Fonts**: IBM Plex Mono, Inter, Outfit, Cormorant Garamond
 
 ## Structure
 
 ```text
-artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
-├── lib/                    # Shared libraries
-│   ├── api-spec/           # OpenAPI spec + Orval codegen config
-│   ├── api-client-react/   # Generated React Query hooks
-│   ├── api-zod/            # Generated Zod schemas from OpenAPI
-│   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+artifacts/
+├── api-server/         # Express API server (health check)
+├── hedgebot-pro/       # Main React + Vite app (previewPath: /)
+│   └── src/
+│       ├── App.tsx           # Root app with auth guard
+│       ├── index.css         # Binance-style design system
+│       ├── lib/
+│       │   ├── auth.ts       # SessionStorage auth, lockout logic
+│       │   ├── theme.ts      # Dark/light mode persistence (localStorage)
+│       │   ├── format.ts     # Number formatters (USD, IDR, %)
+│       │   ├── hedgeCalc.ts  # Full hedge calculation engine
+│       │   └── goldCalc.ts   # Gold price calculation engine
+│       ├── hooks/
+│       │   └── useTheme.ts   # Theme hook
+│       ├── components/
+│       │   ├── Navbar.tsx    # Top navigation bar
+│       │   └── ThemeToggle.tsx # Dark/light toggle pill
+│       └── pages/
+│           ├── LoginPage.tsx   # Login with show/hide password + lockout
+│           ├── HedgebotPage.tsx # Full hedge calculator with 8 output tabs
+│           └── GoldPage.tsx    # Gold converter with 5 output tabs
+└── mockup-sandbox/     # Design prototyping
 ```
 
-## TypeScript & Composite Projects
+## Features
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
+### Auth System
+- Username: `alpha` / Password: `tester`
+- SessionStorage (auto-logout on refresh)
+- Max 5 failed attempts → 5 min lockout with countdown
+- Show/hide password toggle
 
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
+### Theme System
+- Dark mode (default, Binance dark palette)
+- Light mode (Binance light palette)
+- Persists in localStorage
+- Toggle available on login page AND in navbar
 
-## Root Scripts
+### HedgeBot Calculator
+**Inputs:**
+- Pair selector chips (BTC/ETH/BNB/SOL/XRP/DOGE/WIF/PEPE + custom)
+- USDT/IDR rate (manual override)
+- Entry Long, SL Long, Exposure, Leverage (1-125x slider + manual)
+- Account Balance, Risk %
+- TP1/TP2/TP3 in R (sliders + manual)
+- Partial close % at TP1 and TP2
+- Hedge: Entry Short, SL Short, TP Short, Exposure Short, Hedge Leverage, Trigger RR (all with sliders)
 
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
+**Output tabs (8 tabs):**
+1. Summary - 8 key metric cards
+2. Detail Table - Long vs Hedge vs Combined
+3. Scenarios - Bear/Bull/Full Bull P&L
+4. Partial Close - TP1/TP2/TP3 partial close analysis
+5. Price Map - All price levels with distance & P&L impact
+6. Waterfall - Hedge efficiency visual bar chart
+7. All Params - 30+ detailed parameters (grouped by category)
+8. Bot Code - Binance WebSocket pseudocode with timestamp
 
-## Packages
+### Gold Converter
+- Auto-fetch USD/IDR from open.er-api.com + frankfurter.app fallback
+- Manual override for both USD/IDR rate and gold spot price
+- Auto-calculates on input change
 
-### `artifacts/api-server` (`@workspace/api-server`)
+**Output tabs (5 tabs):**
+1. Summary - 8 weight cards
+2. Weight Table - 14-row table from mg to 10kg
+3. Custom Calc - Gram + purity calculator with formula
+4. Purity - 5 purity grades comparison (24K/22K/18K/14K/9K)
+5. All Params - 25+ detailed parameters across 4 categories
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+### Design System (Binance-inspired)
+- Dark bg: `hsl(220 13% 8%)`, Yellow accent: `#F0B90B`
+- Light mode: clean white with yellow accents
+- CSS grid background pattern
+- Custom scrollbars, range sliders, animations
+- Ticker strip (auto-scrolling)
+- Staggered children animation
+- Card hover effects with yellow glow
+- Page enter animation (slide from right)
+- Gradient text (shimmer animation)
 
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
-
-### `lib/db` (`@workspace/db`)
-
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
-
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
-
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
-
-### `lib/api-spec` (`@workspace/api-spec`)
-
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
-
-Run codegen: `pnpm --filter @workspace/api-spec run codegen`
-
-### `lib/api-zod` (`@workspace/api-zod`)
-
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+## Routes
+- `/` → HedgeBot Pro page (with auth guard)
+- `/hedgebot` → HedgeBot Pro page
+- `/gold` → Gold Converter page
+- `/api/healthz` → API health check

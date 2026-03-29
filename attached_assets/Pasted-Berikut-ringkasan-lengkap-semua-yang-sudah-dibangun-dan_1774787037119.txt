@@ -1,0 +1,127 @@
+Berikut ringkasan lengkap semua yang sudah dibangun dan spesifikasinya:
+
+---
+
+## HedgeBot Pro — Master Prompt
+
+**Stack:** Single HTML file, vanilla JS, IBM Plex Mono + Outfit + Cormorant Garamond fonts.
+
+---
+
+### Arsitektur
+
+Single file dengan 3 "page" yang di-switch via JS (`.page` / `.page.active`):
+- `page-login` — aktif pertama saat load
+- `page-hedgebot` — halaman utama
+- `page-gold` — gold converter
+
+**Auth:** sessionStorage (logout otomatis saat refresh). Credentials: `alpha` / `tester`. Max 5x salah → lockout 5 menit. Semua init dijalankan di akhir script setelah semua fungsi terdefinisi.
+
+---
+
+### Design System
+
+**Dark mode (default):**
+- bg: `#060a0e`, surface: `#0b1016`, card: `#0f1620`
+- border: `#182030`, border2: `#1e2c3e`
+- accent: `#00d4ff`, accent2: `#0077ff`
+- green: `#00e676`, red: `#ff3d5a`, yellow: `#ffd600`, purple: `#b36cff`, orange: `#ff6b35`
+- text: `#d8e8f4`, muted: `#3a5568`, muted2: `#5a7080`
+
+**Light mode** (`body.light`):
+- bg: `#f0f4f8`, surface/card: `#ffffff`
+- accent: `#0077cc`, green: `#00a855`, red: `#d42040`, yellow: `#c08000`
+- text: `#1a2a3a`
+
+**Theme toggle:** Pill switch di hamburger menu semua halaman + di login page (sebelum masuk). Tersinkron semua. Preferensi disimpan di localStorage (persisten meski refresh).
+
+**Grid background:** CSS repeating linear-gradient 48px.
+
+---
+
+### Login Page
+
+- Full screen, centered card
+- Username/password field + show/hide password (👁)
+- Dark/Light toggle di pojok kanan atas (accessible sebelum login)
+- Shake animation saat salah
+- Lockout timer UI saat 5x gagal
+- Style: dark card dengan accent border, IBM Plex Mono
+
+---
+
+### Hamburger Menu (identik di HedgeBot & Gold)
+
+Konten menu sama persis di kedua halaman:
+- Item aktif (halaman saat ini) dengan highlight
+- Navigasi antar: HedgeBot ↔ Gold Converter
+- Placeholder items: Position Size Calc, Trading Journal, Price Alert
+- Theme pill switch (tersinkron)
+- Tombol Logout (merah, sessionStorage dihapus)
+
+Di Gold: hamburger berwarna gradient emas. Di HedgeBot: gradient cyan-biru.
+
+---
+
+### HedgeBot Pro
+
+**Input:**
+- Pair selector (chips): BTC, ETH, BNB, SOL, XRP, DOGE, WIF, PEPE + custom pair manual (nama + harga)
+- Kurs USDT/IDR (override manual, tampil di header)
+- Entry Long, SL Long
+- Exposure + Margin (auto-calculate satu sama lain berdasarkan leverage)
+- Leverage (1–125x)
+- Position Size (koin, auto dari exposure/entry)
+- Account Balance + Risiko per Trade % (untuk balance risk metric)
+- Hedge settings: Entry Short, Trigger RR (default 0.5R), SL Short, TP Short, Exposure Short, Hedge Leverage — semua bisa custom atau auto
+- TP1/TP2/TP3 dalam satuan R
+- Partial Close % di TP1 dan TP2
+
+**Output setelah kalkulasi:**
+
+1. **Ticker strip** — 10 item: Pair, Entry Long, SL Long, 1R USDT, 1R %, Hedge @, Pos Size, Total Margin, Liq Price, Leverage
+
+2. **Key Risk Metrics** (8 kartu grid 4 kolom): Max Loss SL, Max Loss + Hedge, Hedge Efficiency %, RR Ratio TP2, ROI per Trade TP2, Liquidation Price, 1R Value, Balance Risk %
+
+3. **Position Detail Table** — kolom: Parameter, LONG, HEDGE SHORT, Combined. Baris: Direction, Entry, SL, TP, Exposure, Margin, Leverage, Pos Size, Max Profit, Max Loss, Hedge Trigger
+
+4. **Price Level Map** — semua level dari TP3 sampai Liquidation: harga, IDR, jarak dari entry %, P&L impact, action label
+
+5. **3 Skenario** (Bear/Bull/Full Bull): P&L long, P&L short, tanpa hedge, hedge cost/savings, NET USDT + IDR, catatan efisiensi
+
+6. **Partial Close Analysis** — tabel TP1/TP2/TP3: % close, qty koin, realized P&L USDT + IDR, sisa posisi
+
+7. **Hedge Efficiency Waterfall** — gross loss, hedge offset, net loss, efisiensi %, vs tanpa hedge
+
+8. **Pseudocode bot** — dengan timestamp, semua config, step-by-step logic termasuk partial close dan WebSocket endpoint Binance
+
+**Logika hedge:** Exposure-based linear P&L (`expo * (exit-entry)/entry`). Hedge trigger default 0.5R dari entry. TP short = SL long. SL short = Entry long.
+
+---
+
+### Gold Converter
+
+**Input:** Harga per troy oz (USD atau IDR), kurs USD/IDR (auto-fetch dari frankfurter.app atau open.er-api.com, fallback 16300, bisa override), tanpa badge status.
+
+**Output:**
+
+1. **3 Summary cards** — Per Gram USD, Per Gram IDR, Per Troy Oz USD
+
+2. **Detail table 14 baris** — dari per miligram sampai per 10 kilogram
+
+3. **Kalkulator Gram Custom** — input gram + pilihan kemurnian (24K/22K/18K/14K/9K) → total USD + IDR + formula detail
+
+**Estetika Gold:** Dark `#080600`, gold palette (`#F5C842`, `#C8972A`, `#8B6914`), Cormorant Garamond serif untuk angka besar, ornament diamond + garis, gold particle animation.
+
+---
+
+### Conventions
+
+- Semua P&L selalu tampil dalam USDT **dan** IDR (konversi real-time dari kurs yang diset)
+- Kurs override di HedgeBot header, di Gold di dalam form input
+- Pair chip custom bisa dihapus (tombol ×), tersimpan selama sesi
+- Semua init dijalankan di **satu blok di akhir script** setelah semua fungsi terdefinisi
+- `sessionStorage` untuk auth, `localStorage` hanya untuk tema
+- Light mode Gold punya theming tersendiri dengan warna emas yang disesuaikan
+
+buatkan aku hasil terbaik dari permintaan yang kumau diatas sebagai agent vibe coding terbaik
