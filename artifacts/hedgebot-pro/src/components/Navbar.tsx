@@ -26,9 +26,6 @@ export function Navbar({ onLogout }: NavbarProps) {
     onLogout();
   };
 
-  const isHedge = location === '/hedgebot' || location === '/';
-  const isGold = location === '/gold';
-
   return (
     <>
       {/* Top Navbar */}
@@ -48,16 +45,18 @@ export function Navbar({ onLogout }: NavbarProps) {
         <div className="hidden md:flex items-center gap-1">
           {NAV_ITEMS.map(item => (
             item.active ? (
-              <Link key={item.path} href={item.path}>
-                <a className={cn(
+              <Link
+                key={item.path}
+                href={item.path}
+                className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all duration-200',
                   location === item.path || (item.path === '/hedgebot' && location === '/')
                     ? 'bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/30'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                )}>
-                  <item.icon className="w-3.5 h-3.5" />
-                  {item.label}
-                </a>
+                )}
+              >
+                <item.icon className="w-3.5 h-3.5" />
+                {item.label}
               </Link>
             ) : (
               <button key={item.path} disabled className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-muted-foreground/40 cursor-not-allowed">
@@ -94,18 +93,19 @@ export function Navbar({ onLogout }: NavbarProps) {
           <div className="bg-card/98 backdrop-blur-xl border-b border-border p-4 space-y-1 animate-slide-up" onClick={e => e.stopPropagation()}>
             {NAV_ITEMS.map(item =>
               item.active ? (
-                <Link key={item.path} href={item.path}>
-                  <a
-                    onClick={() => setMenuOpen(false)}
-                    className={cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
-                      location === item.path || (item.path === '/hedgebot' && location === '/')
-                        ? 'bg-[#F0B90B]/15 text-[#F0B90B]'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    )}>
-                    <item.icon className="w-4 h-4" />
-                    {item.label}
-                  </a>
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  onClick={() => setMenuOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors',
+                    location === item.path || (item.path === '/hedgebot' && location === '/')
+                      ? 'bg-[#F0B90B]/15 text-[#F0B90B]'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  )}
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.label}
                 </Link>
               ) : (
                 <div key={item.path} className="flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium text-muted-foreground/40">
